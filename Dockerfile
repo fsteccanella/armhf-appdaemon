@@ -1,4 +1,4 @@
-FROM balenalib/armv7hf-alpine-python:3.9-build AS builder
+FROM balenalib/armv7hf-alpine-python:3.7.2-3.9-build AS builder
 
 # Sets utf-8 encoding for Python et al
 ENV LANG=C.UTF-8
@@ -6,21 +6,16 @@ ENV LANG=C.UTF-8
 ENV PYTHONDONTWRITEBYTECODE=1
 # Seems to speed things up
 ENV PYTHONUNBUFFERED=1
-
-# Ensures that the python and pip executables used
-# in the image will be those from our virtualenv.
-ENV PATH="/venv/bin:$PATH"
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 RUN [ "cross-build-start" ]
 
-RUN apk add python3-dev
-RUN pip3 install --no-cache-dir virtualenv
-RUN python -m virtualenv /venv
-RUN pip3 install --no-cache-dir appdaemon
+RUN python3 -m venv /venv
+RUN /venv/bin/pip3 install --no-cache-dir appdaemon
 
 RUN [ "cross-build-end" ]
 
-FROM balenalib/armv7hf-alpine-python:3.9
+FROM balenalib/armv7hf-alpine-python:3.7.2-3.9
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -29,7 +24,7 @@ ENV PATH="/venv/bin:$PATH"
 
 COPY --from=builder /venv /venv
 
-VOLUME /conf
+VOLUME /config
 EXPOSE 5050
 
-CMD appdaemon -c /conf
+CMD appdaemon -c /config
